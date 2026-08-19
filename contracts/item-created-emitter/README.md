@@ -2,6 +2,10 @@
 
 A dummy Soroban contract that emits `ItemCreated` events matching the data structure the real Factory contract will eventually produce. Deployed to Stellar public testnet with 3 test token instances to unblock the LL3/Substreams pipeline.
 
+**Related documentation:**
+- [TESTING.md](./TESTING.md) — Test categories, coverage plan, invariants, fuzz strategy, mutation plan
+- [SECURITY.md](./SECURITY.md) — Authorization model, trust assumptions, emergency behavior
+
 ## Purpose
 
 Derek needs `ItemCreated` events on testnet to build and test the Substreams indexing pipeline. The real Factory contract isn't ready yet, so this emitter produces the same event shape so the pipeline work can proceed in parallel.

@@ -1,0 +1,3 @@
+# Clippy configuration for DTCC contract standards.
+# All warnings are treated as errors in CI (cargo clippy -- -D warnings).
+too-many-arguments-threshold = 7

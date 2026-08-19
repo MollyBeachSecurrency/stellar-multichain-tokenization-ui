@@ -1,0 +1,103 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Frontend CI — DTCC/SEC Quality Requirements (§16)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Per §16: Frontend repos must enforce:
+#   - Build passes (npm run build)
+#   - Lint passes (ESLint)
+#   - Type check passes (TypeScript strict mode)
+#   - Event schema validation
+#   - No secrets committed
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "next.config.js"
+      - "vitest.config.ts"
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+
+jobs:
+  # ─── Build & Type Check ─────────────────────────────────────────────────────
+  build:
+    name: Build & TypeCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript strict check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+
+  # ─── Lint ───────────────────────────────────────────────────────────────────
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+
+  # ─── Tests ──────────────────────────────────────────────────────────────────
+  test:
+    name: Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm run test
+      - name: Run coverage
+        run: npm run test:coverage
+
+  # ─── Secret Scan ───────────────────────────────────────────────────────────
+  secrets:
+    name: No Secrets Committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for secrets patterns
+        run: |
+          # Check for common secret patterns
+          if grep -rn "PRIVATE_KEY\|SECRET_KEY\|-----BEGIN.*PRIVATE" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" src/ 2>/dev/null; then
+            echo "ERROR: Potential secrets found in source code"
+            exit 1
+          fi
+          echo "No secrets detected."
+
+  # ─── All Frontend Checks Gate ───────────────────────────────────────────────
+  frontend-ci-passed:
+    name: Frontend CI Passed
+    runs-on: ubuntu-latest
+    needs: [build, lint, test, secrets]
+    steps:
+      - name: All frontend checks passed
+        run: echo "All DTCC/SEC frontend CI checks passed."
